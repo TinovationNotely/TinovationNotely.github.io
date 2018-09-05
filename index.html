@@ -1,0 +1,606 @@
+<!DOCTYPE html> <html>
+<head>
+    <!-- https://stackoverflow.com/questions/5454593/how-to-clear-all-css-styles#5454637 -->
+    <style>
+        
+        
+        /*Card Style for classes*/
+        .cardN   {
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            transition: 0.3s;
+            width: 400px;
+            height: 450px;
+            border-radius: 5%;
+            padding: 2%;
+            background-color: #4edde5;
+        }
+        .card:active {             
+            transform: translateY(4px);
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+
+        .img {
+             width: 250px;
+            height: 250px;
+            margin-right: auto;
+            margin-left: auto;
+            display:block;
+            border-radius: 50%;
+            overflow: hidden;
+            padding:5px 4px;
+        
+        }
+
+        .container {
+            padding: 2px 16px;
+        } 
+        
+        .grow { transition: all .2s ease-in-out; }
+        .grow:hover { transform: scale(1.1); }
+        
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/4.10.0/firebase.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    
+    <script>
+        class Note {
+            constructor(name, des) {
+                this.name = name;
+                this.des = des;
+            }
+        }
+        
+        class NoteObj {
+            constructor(div, cardImg, classNText, classNDes) {
+                this.cardImg = cardImg;
+                this.classNText = classNText;
+                this.classNDes = classNDes;
+                this.div = div;
+                this.clicked = false;
+                this.finishedAnimation = true;
+                
+                this.click = function() {
+                    
+                    $(this.cardImg).fadeOut(1000);
+                    $(this.classNText).fadeOut(1000);
+                    $(this.classNDes).fadeOut(1000);
+                }
+            }
+            
+            
+        }
+        
+        var noteObjArr = [];
+    </script>
+    <script>
+        //resources http://materializecss.com/getting-started.html
+        // https://disqus.com/
+        // https://stackoverflow.com/questions/38497334/how-to-run-html-file-on-localhost
+        
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyBYn0-u-4jrsWB1f0TjnzSrb9rwujjO9Vk",
+        authDomain: "tinovation-data.firebaseapp.com",
+        databaseURL: "https://tinovation-data.firebaseio.com",
+        projectId: "tinovation-data",
+        storageBucket: "tinovation-data.appspot.com",
+        messagingSenderId: "438853586812"
+      };
+      firebase.initializeApp(config);
+        
+        var database = firebase.database();
+        var classroomParent = database.ref().child("Classrooms");
+        
+        var classes = {};
+        var currentUser;
+        var users = database.ref().child("Users");
+        
+        //loops through the classes
+        //finds the notes and adds them in
+        function updateNotes(callback) {
+            /*classroomParent.ref.once("value")
+                .then(function(snapshot) {
+                snapshot.forEach(function(childSnapShot) {
+                    var key = childSnapShot.key;
+                    var val = childSnapShot.val();
+
+                    var notes = [];
+                    childSnapShot.forEach(function (child2SnapShot){
+                        var n = new Note(child2SnapShot.key, 
+                                        child2SnapShot.val());
+                       notes.push(n);
+                    });
+                    classes[key] = notes;
+                });
+            });*/
+            if (currentUser == null) {
+                console.log("Sign in");
+            }
+            classes.clear;
+            /*
+            users.ref.once("value")
+                    .then(function(snapshot) {
+                        snapshot.forEach(function(childSnapShot) {
+                            //uid
+                            var key = childSnapShot.key;
+                            var val = childSnapShot.val();
+                            if (key == currentUser.uid) {
+                                var notes = [];
+                                childSnapShot.forEach(function (child2SnapShot){
+                                    //classroom
+                                    child2SnapShot.forEach(function (classObj) {
+                                       //classes
+                                        console.log(classObj);
+                                        classObj.forEach(function(noteObj) {
+                                           //note object
+                                            var n = new Note(noteObj.key, noteObj.val());
+                                             console.log(noteObj.key + ": " + noteObj.val());
+                                            notes.push(n);
+                                        });
+                                        console.log(notes);
+                                        classes[classObj.key] = notes;
+                                        notes = [];
+                                    });                                                                              
+                                });
+                            }
+                        });
+                    });
+            console.log(classes);
+            */
+            var name, email, photoUrl, uid, emailVerified;
+                //console.log(currentUser);
+                if (currentUser) {
+                     uid = currentUser.uid;
+                     name = currentUser.displayName;
+                     email = currentUser.email;
+                     photoUrl = currentUser.photoURL;
+                     emailVerified = currentUser.emailVerified;
+                    
+                    users.ref.once("value")
+                    .then(function(snapshot) {
+                        snapshot.forEach(function(childSnapShot) {
+                            //uid
+                            var key = childSnapShot.key;
+                            var val = childSnapShot.val();
+                            if (key == uid) {
+                                var notes = [];
+                                childSnapShot.forEach(function (child2SnapShot){
+                                    //classroom
+                                    child2SnapShot.forEach(function (classObj) {
+                                       //classes
+                                        classObj.forEach(function(noteObj) {
+                                           //note object
+                                            var n = new Note(noteObj.key, noteObj.val());
+                                            //console.log(noteObj.key + ": " + noteObj.val());
+                                            notes.push(n);
+                                        });
+                                        
+                                        classes[classObj.key] = notes;
+                                        notes = [];
+                                    });
+                                                           
+                                                           
+                                   
+                                });
+                                
+                            }
+                        });
+                    });
+                      
+                } else {
+                    console.log("Sign in please");
+                }
+            //console.log("FINISHED");
+            //console.log(classes);
+            callback && callback();
+        }
+        function addToFireBase(cN, nN, nD) {
+            if (currentUser == null) {
+                console.log("Sign in first");
+                return;
+            }
+            console.log(cN + " " + nN + " " + nD);
+            var updates = {};
+            updates['/Users/' + currentUser.uid + '/Classrooms/'+ cN + '/' + nN] = nD; 
+            database.ref().update(updates);
+            updateNotes();
+        }
+        
+    </script>
+   <!-- <script src="jquery-3.3.1.min.js"></script>-->
+    
+    <script>
+        var notFinishedText;
+        var className;
+        var noteName;
+        var noteDes;
+        function init() {
+            notFinishedText = document.getElementById("NotFinishedText");
+            className = document.getElementById("class_name");
+            noteName = document.getElementById("note_title");
+            noteDes = document.getElementById("description");
+            /*
+            updateNotes(function() {
+                setTimeout(function() {
+                    displayNotes();
+                }, 1000);
+            });*/
+            
+            firebase.auth().signOut().then(function() {
+                  console.log('Signed Out');
+                }, function(error) {
+                  console.error('Sign Out Error', error);
+                });
+            firebase.auth().onAuthStateChanged(function(user) {
+              if (user) {
+                currentUser = user;
+                updateNotes();
+              } else {
+                // No user is signed in.
+              }
+            });
+            
+            document.getElementById("createUser").onclick = function() {
+                var em = document.getElementById("email").value;
+                var pas = document.getElementById("password").value;
+                console.log(em);
+                firebase.auth().createUserWithEmailAndPassword(em, pas).catch(function(error) {
+                  // Handle Errors here.
+                  var errorCode = error.code;
+                  var errorMessage = error.message;
+                    console.log(errorCode + " "+ errorMessage);
+                
+                }).then(function(e) {
+                    currentUser = firebase.auth().currentUser;
+                    var updates = {};
+                    updates['/Users/' + currentUser.uid + '/Classrooms/Example Class/Note Title'] = "Example Note"; 
+                    database.ref().update(updates);
+                });
+            };
+
+            document.getElementById("signIn").onclick = function() { 
+                var em = document.getElementById("email").value;
+                var pas = document.getElementById("password").value;
+                
+                firebase.auth().signInWithEmailAndPassword(em, pas).catch(function(error) {
+                  // Handle Errors here.
+                  var errorCode = error.code;
+                  var errorMessage = error.message;
+                    console.log(errorCode + " " + errorMessage);
+                });
+                
+                currentUser = firebase.auth().currentUser;
+            };
+            
+            /*
+            document.getElementById("showInfo").onclick = function() {
+                
+                //var user = firebase.auth().curentUser;
+                var name, email, photoUrl, uid, emailVerified;
+                console.log(currentUser);
+                if (currentUser) {
+                     uid = currentUser.uid;
+                     name = currentUser.displayName;
+                     email = currentUser.email;
+                     photoUrl = currentUser.photoURL;
+                     emailVerified = currentUser.emailVerified;
+                    
+                    users.ref.once("value")
+                    .then(function(snapshot) {
+                        snapshot.forEach(function(childSnapShot) {
+                            //uid
+                            var key = childSnapShot.key;
+                            var val = childSnapShot.val();
+                            if (key == uid) {
+                                var notes = [];
+                                childSnapShot.forEach(function (child2SnapShot){
+                                    //classroom
+                                    child2SnapShot.forEach(function (classObj) {
+                                       //classes
+                                        classObj.forEach(function(noteObj) {
+                                           //note object
+                                            var n = new Note(noteObj.key, noteObj.val());
+                                             console.log(noteObj.key + ": " + noteObj.val());
+                                            notes.push(n);
+                                        });
+                                        
+                                        classes[classObj.key] = notes;
+                                        notes = [];
+                                    });
+                                                           
+                                                           
+                                   
+                                });
+                                
+                            }
+                        });
+                    });
+                      
+                } else {
+                    console.log("Sign in please");
+                }
+                console.log(classes);
+            }
+            */
+            
+            
+            
+        }
+        
+        function makeNewNote() {
+            if (className.value.length == 0 ||
+               noteName.value.length == 0 ||
+               noteDes.value.length == 0) {
+                notFinishedText.style.visibility = "visible";
+            } else{
+                var cN = className.value;
+                var nN = noteName.value;
+                var nD = noteDes.value;
+                
+                addToFireBase(cN, nN, nD);
+                
+                notFinishedText.style.visibility = "collapse";
+            }
+        }
+        
+       
+        function displayNotes() {
+            updateNotes(function() {
+                //console.log(classes);
+                noteObjArr = [];
+
+                document.getElementById("ClassDisplay").innerHTML = "";
+                for (var className in classes) {
+                    var div = document.createElement("div");
+                    div.style.width = "500px";
+                   // div.style.width = "25%";
+                //    div.style.height = "25%";
+                    div.style.textalign = "center";
+
+                   // div.style.align = "center";
+                    div.className = "cardN";
+
+
+
+
+
+                    var cardImg = document.createElement("img");
+                    cardImg.setAttribute("src", "Notely_Res/History_Room_Image.jpg");
+                    //cardImg.setAttribute("width", "50%");
+                    //cardImg.setAttribute("height", "50%");
+                    cardImg.setAttribute("alt", "Image");
+                    //cardImg.style.align = "center";
+                    //cardImg.style.borderRadius = "50%";
+                    cardImg.className = "img grow";
+                    div.append(cardImg);
+
+
+                    var containerForDescription = document.createElement("div");
+                    containerForDescription.className = "container";
+                    div.append(containerForDescription);
+
+                    var classNameText = document.createElement("h4");
+                    classNameText.innerHTML = className;
+                    classNameText.style.textAlign = "center"; 
+                    var classRoomDescription = document.createElement("p");
+                    classRoomDescription.innerHTML = "Class description (Click to view notes)";
+
+                    containerForDescription.append(classNameText);
+                    containerForDescription.append(classRoomDescription);
+
+                    var noteObj = new NoteObj(div, cardImg, classNameText, classRoomDescription);
+                    noteObjArr.push(noteObj);
+
+                    /*
+                    div.onmousedown = function() {
+
+                        $(cardImg).fadeOut(500);
+                        $(classNameText).fadeOut(500);
+                        $(classRoomDescription).fadeOut(500);
+
+
+                        var classN = this.childNodes[1].childNodes[0].innerHTML;
+                       // console.log(classes[classN]);
+                        for (var n in classes[classN]) {
+                            var note = classes[classN][n];
+                            console.log(classN + "\n\t" + note.name + "\n\t\t" + note.des);
+                            //console.log(note.des);
+                        }
+                    }*/
+
+                    /*
+                    var div = document.createElement("div");
+                    div.style.lineHeight = "0%";
+                    div.style.width = "25%";
+
+                    var classNameText = document.createElement("p");
+                    classNameText.innerHTML = className;
+                    classNameText.style.color = "red";
+
+                    div.append(classNameText);
+
+                    var noteArr = classes[className];
+                    for (var i in noteArr) {
+                        //n - note name
+                        //d - note description
+                        var n = document.createElement("p");
+                        var d = document.createElement("p");
+                        n.innerHTML = noteArr[i].name; n.style.textAlign = "center";
+                        d.innerHTML = noteArr[i].des; d.style.textAlign = "center";
+
+                        div.append(n);
+                        div.append(d);
+
+                    }
+                    */
+
+                    document.getElementById("ClassDisplay").append(div);
+                    document.getElementById("ClassDisplay").append(document.createElement("br"));
+                    document.getElementById("ClassDisplay").append(document.createElement("br"));
+
+                }
+
+                for (var i = 0; i < noteObjArr.length; i++) {
+                    var not = noteObjArr[i];
+                    not.div.onmousedown = function(e) {
+                        e.preventDefault();
+                        not.clicked = !not.clicked;
+
+                        this.childNodes.forEach(function(e) {
+                            $(e).stop();
+                        });
+
+                        if (not.clicked) {
+                            //console.log(this);
+                            //console.log(not.classNText.innerHTML);
+
+                            $(this).stop().animate({width: "750px"});
+                            this.childNodes.forEach(function(e) {
+                                $(e).fadeOut(300);
+                            });
+
+
+
+                            var classN = this.childNodes[1].childNodes[0].innerHTML;
+                           // console.log(classes[classN]);
+                            for (var n in classes[classN]) {
+                                var note = classes[classN][n];
+                                //console.log(classN + "\n\t" + note.name + "\n\t\t" + note.des);
+
+                                //var cN = document.createElement("h4");
+                                //cN.innerHTML = classN;
+                                //cN.style.visibility = "hidden";
+
+                                var nName = document.createElement("h3");
+                                nName.innerHTML = note.name;
+                                //nName.style.visibility = "hidden";
+
+                                var nDes = document.createElement("h6");
+                                nDes.innerHTML = note.des;
+                                //nDes.style.visibility = "hidden";
+
+                                var dIV = document.createElement("div");
+                                dIV.style.textalign = "center";
+                                //dIV.append(cN);
+                                dIV.append(nName);
+                                dIV.append(nDes);
+
+                                this.append(dIV);
+
+                                dIV.childNodes.forEach(function(e) {
+                                    $(e).fadeOut(0);
+                                });
+
+                                dIV.childNodes.forEach(function(e) {
+                                    $(e).fadeIn(2000);
+                                });
+
+
+                            }
+
+                        } else {
+                            $(this).stop().animate({width: "500px"});
+                            //console.log(this.childNodes);
+                            for (var i = 2; i < this.childNodes.length; i++) {
+                                this.childNodes[i].style.visibility = "collapse";
+                                //$(this.childNodes[i]).fadeOut(50);
+                            }
+                            $(this.childNodes[0]).fadeIn(1000);
+                            $(this.childNodes[1]).fadeIn(1000);
+
+                        }
+                    }
+                }
+            });
+        }     
+    </script>
+    </head>
+    <body onload="init()">
+        <br><br>
+        <h3 align="center">Create Note</h3>
+        <br>
+        <div class="row">
+            <form class="col s12">
+              <div class="row">
+                <div class="input-field col s6">
+                  <input placeholder="Class Name" id="class_name" type="text" class="validate">
+                  <label for="class_name">Class Name</label>
+                </div>
+                <div class="input-field col s6">
+                  <input placeholder="Note Title" id="note_title" type="text" class="validate">
+                  <label for="note_title">Note Title</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="input-field col s12">
+                  <input placeholder="Note Description"  id="description" type="text" class="validate">
+                  <label for="description">Note Description</label>
+                </div>
+              </div>
+            </form>
+            <center><button class="btn waves-effect waves-light" onclick="makeNewNote()" id="newNoteButton">Create!</button></center>
+          </div>
+        <br>
+        <!--
+        <div align="center" style="resetStyles">
+            Class:<br>
+            <input type="text" id="className" value="class_name"><br>
+            Note Title:<br>
+            <input type="text" id="noteName" value="note_title"><br>
+            Notes:<br>
+            <textarea id="description" rows="5" cols="40">Today I learned...</textarea><br>
+            
+        </div>
+        -->
+        
+        <div align="center">
+            <p style="color:red; visibility: collapse" id="NotFinishedText">Fill in all the fields!</p>
+        </div>
+        <br><br>
+        <!--
+        <div>
+        <input id="email" type="text" value="email">
+        <br>
+        <input id="password" type="text" style="" value="pass">
+        <br>
+        <input type="button" width="50px" value="Create" id="createUser" style="default">
+        <br><br>    
+        <input type="button" width="50px" value="Sign In" id="signIn" style="default">
+        <br><br>
+        <input type="button" width="50px" value="Show Info" id="showInfo" style="!important">
+    </div>-->
+        
+        <h4 align="center">Login</h4>
+        <h6 align="center">Use test@gmail.com and 123456 for an example</h6><br>
+        <div class="row">
+            <form class="col s12">
+              <div class="row">
+                <div class="input-field col s6">
+                  <input placeholder="Email" id="email" type="text" class="validate">
+                  <label for="email">Email</label>
+                </div>
+                <div class="input-field col s6">
+                  <input placeholder="Password" id="password" type="text" class="validate">
+                  <label for="password">Password</label>
+                </div>
+              </div>
+            </form>
+            <center><input type="button" width="50px" value="Create" id="createUser" class="btn waves-effect waves-light">
+            <br><br>    
+            <input type="button" width="50px" value="Sign In" id="signIn" class="btn waves-effect waves-light"></center>
+          </div>
+        <br><br>
+        <center><button class="btn waves-effect waves-light" onclick="displayNotes()">Display Notes</button></center><br><br>
+        <div id="ClassDisplay" style="width: 100%">
+        </div>
+    </body>
+    
+    
+    
+</html>
